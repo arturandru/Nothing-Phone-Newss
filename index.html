@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E4E4E1">
+<title>Brief</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --paper:#E4E4E1;
+  --panel:#F2F2F0;
+  --ink:#000000;
+  --dim:#6E6E6A;
+  --rule:#C6C6C1;
+  --red:#D71921;
+  --pad:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Roboto",-apple-system,"Segoe UI",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.4;
+  padding-bottom:88px;
+  overscroll-behavior-y:contain;
+}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* ---------- hero ---------- */
+header{padding:calc(var(--pad) + env(safe-area-inset-top)) var(--pad) 14px}
+
+#glyph{
+  display:flex;
+  align-items:flex-end;
+  gap:3px;
+  height:52px;
+  margin-bottom:20px;
+}
+#glyph .seg{
+  flex:1;
+  min-width:0;
+  background:var(--ink);
+  opacity:.18;
+  border-radius:1px;
+  height:6px;
+  transition:height .45s cubic-bezier(.2,.8,.2,1),opacity .45s;
+}
+#glyph .seg.on{opacity:1}
+#glyph .seg.skip{background:var(--red);opacity:.55}
+@media (prefers-reduced-motion:reduce){#glyph .seg{transition:none}}
+
+#date{
+  font-size:34px;
+  font-weight:800;
+  letter-spacing:-.03em;
+  line-height:1.02;
+  margin:0;
+}
+#count{
+  margin:6px 0 0;
+  font-size:14px;
+  color:var(--dim);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- stories ---------- */
+main{border-top:1px solid var(--rule)}
+article{
+  padding:16px var(--pad) 14px;
+  border-bottom:1px solid var(--rule);
+  scroll-margin-top:8px;
+}
+article.rated{opacity:.4}
+.meta{
+  display:flex;
+  gap:8px;
+  align-items:baseline;
+  font-size:12px;
+  color:var(--dim);
+  font-variant-numeric:tabular-nums;
+  margin-bottom:5px;
+}
+.src{font-weight:700;color:var(--ink);letter-spacing:.01em}
+h2{
+  font-size:19px;
+  font-weight:600;
+  line-height:1.24;
+  letter-spacing:-.015em;
+  margin:0 0 8px;
+  max-width:38ch;
+}
+.sum{
+  font-size:14px;
+  color:var(--dim);
+  margin:0 0 10px;
+  max-width:52ch;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.tags{font-size:12px;color:var(--dim);margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center}
+.vote{
+  border:1px solid var(--ink);
+  padding:7px 15px;
+  font-size:13px;
+  font-weight:600;
+  border-radius:999px;
+  min-height:38px;
+}
+.vote.down{border-color:var(--rule);color:var(--dim)}
+.vote:active{background:var(--ink);color:var(--paper)}
+.open{margin-left:auto;font-size:13px;color:var(--dim);text-decoration:underline;padding:7px 0}
+button:focus-visible,a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+/* ---------- states ---------- */
+#state{padding:40px var(--pad);color:var(--dim);font-size:15px;max-width:40ch}
+#state b{color:var(--ink);display:block;font-size:17px;margin-bottom:6px}
+#state button{text-decoration:underline;font-weight:600;color:var(--ink);margin-top:14px}
+
+/* ---------- drawer ---------- */
+#dock{
+  position:fixed;left:0;right:0;bottom:0;
+  background:var(--panel);
+  border-top:1px solid var(--rule);
+  padding-bottom:env(safe-area-inset-bottom);
+  z-index:5;
+}
+#handle{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px var(--pad);
+  font-size:13px;
+  font-weight:600;
+}
+#handle span:last-child{color:var(--dim);font-weight:400}
+#panel{display:none;padding:0 var(--pad) 22px;max-height:56vh;overflow-y:auto}
+#panel.open{display:block}
+.bar{margin-bottom:11px}
+.bar .lab{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;font-variant-numeric:tabular-nums}
+.bar .lab em{font-style:normal;color:var(--dim)}
+.track{height:3px;background:var(--rule);position:relative}
+.track i{position:absolute;top:0;bottom:0;left:50%;background:var(--ink);display:block}
+.track i.neg{background:var(--red)}
+.hint{font-size:13px;color:var(--dim);margin:0 0 16px;max-width:44ch}
+#feeds{width:100%;min-height:150px;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:10px;margin-top:6px;border-radius:0}
+.dockrow{display:flex;gap:18px;margin-top:16px;font-size:13px;font-weight:600}
+.dockrow button{text-decoration:underline}
+.dockrow button.danger{color:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <div id="glyph" aria-hidden="true"></div>
+  <h1 id="date">—</h1>
+  <p id="count">Loading your brief</p>
+</header>
+
+<main id="list"></main>
+<div id="state"></div>
+
+<div id="dock">
+  <button id="handle" aria-expanded="false" aria-controls="panel">
+    <span>What it has learned</span><span id="peek">—</span>
+  </button>
+  <div id="panel">
+    <p class="hint">Every story is tagged. Voting moves the tag's score, and tomorrow's brief is sorted by those scores. Two low-scoring stories are always kept in, so the feed can't narrow to nothing.</p>
+    <div id="bars"></div>
+    <p class="hint" style="margin-top:20px">Feeds — one URL per line. Swap any that go quiet.</p>
+    <textarea id="feeds" spellcheck="false"></textarea>
+    <div class="dockrow">
+      <button id="save">Save feeds</button>
+      <button id="refresh">Refresh now</button>
+      <button id="reset" class="danger">Reset learning</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- storage (falls back to memory if blocked) ---------------- */
+const store = (() => {
+  try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return localStorage; }
+  catch(e){ const m={}; return {getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v)},removeItem:k=>{delete m[k]}}; }
+})();
+const load = (k,d) => { try { return JSON.parse(store.getItem(k)) ?? d; } catch(e){ return d; } };
+const save = (k,v) => store.setItem(k, JSON.stringify(v));
+
+/* ---------------- feeds ---------------- */
+const DEFAULT_FEEDS = [
+  "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+  "https://finance.yahoo.com/news/rssindex",
+  "https://www.investing.com/rss/news_14.rss",
+  "https://www.ecb.europa.eu/press/rss/press.xml",
+  "https://e00-expansion.uecdn.es/rss/portada.xml",
+  "https://www.eleconomista.es/rss/rss-category.php?category=economia",
+  "https://feeds.elpais.com/mrss-s/pages/ep/site/cincodias.elpais.com/portada",
+  "https://www.euractiv.com/sections/economy-jobs/feed/"
+];
+
+/* ---------------- topic dictionary ---------------- */
+const TAGS = {
+  "central banks": ["ecb","fed","federal reserve","lagarde","powell","interest rate","tipos de inter","rate cut","rate hike","monetary","banco central","boe","bank of england","yield curve"],
+  "inflation":     ["inflation","inflación","ipc","cpi","deflation","price index","coste de la vida"],
+  "equities":      ["stocks","shares","equit","ibex","dax","cac","ftse","s&p","nasdaq","dow","bolsa","index fund","selloff","rally"],
+  "earnings":      ["earnings","results","beat estimates","profit","revenue","guidance","resultados","beneficio","quarterly"],
+  "bonds":         ["bond","treasury","gilt","bund","yield","deuda","spread","sovereign debt"],
+  "forex":         ["euro","dollar","currency","forex","exchange rate","sterling","yen","divisa"],
+  "energy":        ["oil","brent","gas","opec","energy","electricity","renewab","petróleo","endesa","iberdrola","repsol"],
+  "spain":         ["spain","spanish","madrid","barcelona","catalonia","españa","español","bbva","santander","caixabank","inditex","telefónica","psoe"],
+  "eu policy":     ["european union","brussels","eu ","european commission","eurozone","euro area","directive","bruselas","comisión europea"],
+  "banking":       ["bank","banking","lender","credit","loan","mortgage","hipoteca","banco","basel"],
+  "property":      ["housing","real estate","property","inmobiliari","vivienda","alquiler","rent"],
+  "labour":        ["jobs","unemployment","payroll","wages","paro","empleo","salario","strike","huelga"],
+  "tech":          ["ai ","artificial intelligence","chip","semiconductor","nvidia","openai","startup","tecnolog"],
+  "trade":         ["tariff","trade war","export","import","supply chain","arancel","comercio"],
+  "crypto":        ["bitcoin","crypto","ethereum","stablecoin","blockchain"],
+  "m&a":           ["merger","acquisition","takeover","ipo","buyout","fusión","opa"]
+};
+
+const RECENCY_H = 30;           // stories older than this are dropped
+const EXPLORE   = 2;            // low-score stories kept in on purpose
+
+let scores  = load("scores", {});   // tag -> number
+let srcs    = load("src", {});      // source -> number
+let voted   = load("voted", {});    // url -> 1|-1
+let feeds   = load("feeds", DEFAULT_FEEDS);
+let articles = [];
+
+/* ---------------- fetching ---------------- */
+const PROXIES = [
+  u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)
+];
+
+async function getFeed(url){
+  for (const p of PROXIES){
+    try{
+      const r = await fetch(p(url), {cache:"no-store"});
+      if (!r.ok) continue;
+      const t = await r.text();
+      if (t.length > 200) return t;
+    }catch(e){ /* next proxy */ }
+  }
+  return null;
+}
+
+function parse(xml, feedUrl){
+  const doc = new DOMParser().parseFromString(xml, "text/xml");
+  if (doc.querySelector("parsererror")) return [];
+  const source = (doc.querySelector("channel > title, feed > title")?.textContent || new URL(feedUrl).hostname)
+                   .replace(/\s*[-–|].*$/,"").trim().slice(0,22);
+  const nodes = [...doc.querySelectorAll("item, entry")];
+  return nodes.map(n => {
+    const link = n.querySelector("link")?.getAttribute("href")
+              || n.querySelector("link")?.textContent
+              || n.querySelector("guid")?.textContent || "";
+    const raw  = n.querySelector("description, summary, content")?.textContent || "";
+    const d    = n.querySelector("pubDate, published, updated")?.textContent;
+    return {
+      title: (n.querySelector("title")?.textContent || "").trim(),
+      url: link.trim(),
+      summary: raw.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().slice(0,240),
+      time: d ? new Date(d).getTime() : Date.now(),
+      source
+    };
+  }).filter(a => a.title && a.url);
+}
+
+function tag(a){
+  const hay = (a.title + " " + a.summary).toLowerCase();
+  const out = [];
+  for (const [name, words] of Object.entries(TAGS))
+    if (words.some(w => hay.includes(w))) out.push(name);
+  return out.length ? out : ["general"];
+}
+
+function score(a){
+  const tagPart = a.tags.reduce((s,t) => s + (scores[t]||0), 0) / Math.sqrt(a.tags.length);
+  const srcPart = (srcs[a.source]||0) * 0.5;
+  const ageH    = (Date.now() - a.time) / 3.6e6;
+  const fresh   = Math.max(0, 1 - ageH/RECENCY_H) * 2.5;
+  return tagPart + srcPart + fresh;
+}
+
+async function build(){
+  paintState("Fetching", "Pulling " + feeds.length + " feeds.");
+  const batches = await Promise.all(feeds.map(async f => {
+    const x = await getFeed(f);
+    return x ? parse(x, f) : [];
+  }));
+
+  const seen = new Set();
+  let all = batches.flat()
+    .filter(a => (Date.now() - a.time) / 3.6e6 < RECENCY_H)
+    .filter(a => { const k = a.title.toLowerCase().slice(0,48); if (seen.has(k)) return false; seen.add(k); return true; })
+    .filter(a => !voted[a.url]);
+
+  if (!all.length){
+    paintState("Nothing came through",
+      "Either every feed is blocked right now, or the URLs need updating. Open the panel below to edit them, then refresh.");
+    return;
+  }
+
+  all.forEach(a => { a.tags = tag(a); a.s = score(a); });
+  all.sort((x,y) => y.s - x.s);
+
+  const top = all.slice(0, 12);
+  const rest = all.slice(12);
+  for (let i = 0; i < EXPLORE && rest.length; i++)
+    top.push(rest.splice(Math.floor(Math.random()*rest.length), 1)[0]);
+
+  articles = top;
+  save("cache", {at: Date.now(), articles});
+  paint();
+}
+
+/* ---------------- rendering ---------------- */
+function paintState(head, body, again){
+  document.getElementById("state").innerHTML = head
+    ? `<b>${head}</b>${body}${again ? '<br><button id="again">Try again</button>' : ''}` : "";
+  const b = document.getElementById("again");
+  if (b) b.onclick = build;
+}
+
+function paint(){
+  const list = document.getElementById("list");
+  const glyph = document.getElementById("glyph");
+  paintState("");
+  list.innerHTML = ""; glyph.innerHTML = "";
+
+  const d = new Date();
+  document.getElementById("date").textContent =
+    d.toLocaleDateString(undefined, {weekday:"long"}) + " " +
+    d.toLocaleDateString(undefined, {day:"numeric", month:"short"});
+
+  const best = Math.max(...articles.map(a => a.s), 1);
+  const strong = articles.filter(a => a.s > best*0.55).length;
+  document.getElementById("count").textContent =
+    `${articles.length} stories · ${strong} matched to you`;
+
+  articles.forEach((a, i) => {
+    const seg = document.createElement("button");
+    seg.className = "seg" + (a.s > best*0.55 ? " on" : (a.s < 0 ? " skip" : ""));
+    seg.style.height = Math.max(6, Math.round(52 * Math.min(1, Math.max(a.s,0)/best))) + "px";
+    seg.onclick = () => document.getElementById("a"+i).scrollIntoView({behavior:"smooth", block:"start"});
+    glyph.appendChild(seg);
+
+    const el = document.createElement("article");
+    el.id = "a"+i;
+    const hrs = Math.round((Date.now()-a.time)/3.6e6);
+    el.innerHTML = `
+      <div class="meta"><span class="src">${esc(a.source)}</span><span>${hrs < 1 ? "just now" : hrs+"h ago"}</span></div>
+      <h2>${esc(a.title)}</h2>
+      ${a.summary ? `<p class="sum">${esc(a.summary)}</p>` : ""}
+      <div class="tags">${a.tags.join(" · ")}</div>
+      <div class="row">
+        <button class="vote up">More like this</button>
+        <button class="vote down">Less</button>
+        <a class="open" href="${esc(a.url)}" target="_blank" rel="noopener">Read</a>
+      </div>`;
+    el.querySelector(".up").onclick   = () => vote(a, el, 1);
+    el.querySelector(".down").onclick = () => vote(a, el, -1);
+    list.appendChild(el);
+  });
+  drawBars();
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function vote(a, el, dir){
+  a.tags.forEach(t => scores[t] = (scores[t]||0) + dir);
+  srcs[a.source] = (srcs[a.source]||0) + dir*0.5;
+  voted[a.url] = dir;
+  save("scores", scores); save("src", srcs); save("voted", voted);
+  el.classList.add("rated");
+  el.querySelectorAll(".vote").forEach(b => b.disabled = true);
+  drawBars();
+}
+
+function drawBars(){
+  const ranked = Object.entries(scores).filter(([,v]) => v !== 0).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+  document.getElementById("peek").textContent = ranked.length ? ranked.length + " topics" : "nothing yet";
+  const box = document.getElementById("bars");
+  if (!ranked.length){
+    box.innerHTML = `<p class="hint" style="color:var(--dim)">No votes yet. Rate a few stories and this fills in.</p>`;
+    return;
+  }
+  const max = Math.max(...ranked.map(([,v]) => Math.abs(v)));
+  box.innerHTML = ranked.map(([t,v]) => {
+    const w = Math.abs(v)/max*50;
+    return `<div class="bar">
+      <div class="lab"><span>${esc(t)}</span><em>${v > 0 ? "+" : ""}${v}</em></div>
+      <div class="track"><i class="${v<0?"neg":""}" style="width:${w}%;${v<0?`left:${50-w}%`:"left:50%"}"></i></div>
+    </div>`;
+  }).join("");
+}
+
+/* ---------------- dock ---------------- */
+document.getElementById("handle").onclick = e => {
+  const p = document.getElementById("panel");
+  p.classList.toggle("open");
+  e.currentTarget.setAttribute("aria-expanded", p.classList.contains("open"));
+};
+document.getElementById("feeds").value = feeds.join("\n");
+document.getElementById("save").onclick = () => {
+  feeds = document.getElementById("feeds").value.split("\n").map(s => s.trim()).filter(Boolean);
+  save("feeds", feeds); build();
+};
+document.getElementById("refresh").onclick = build;
+document.getElementById("reset").onclick = () => {
+  scores = {}; srcs = {}; voted = {};
+  save("scores",{}); save("src",{}); save("voted",{});
+  drawBars(); build();
+};
+
+/* ---------------- boot ---------------- */
+const cached = load("cache", null);
+if (cached && Date.now() - cached.at < 6*3.6e6){ articles = cached.articles; paint(); }
+else paintState("Good morning", "Building today's brief.");
+build();
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
